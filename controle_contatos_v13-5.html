@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Controle de Contatos V1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f5f8;color:#18202a}header{background:#17324d;color:#fff;padding:18px 16px 14px;position:sticky;top:0;z-index:5}header h1{margin:0;font-size:21px}header small{opacity:.8}.wrap{max-width:760px;margin:auto;padding:12px}.toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer}.primary{background:#1677ff;color:white}.secondary{background:#e7edf4;color:#17324d}.danger{background:#d93025;color:#fff}.search{width:100%;padding:12px;border:1px solid #ccd5df;border-radius:12px;font-size:16px}.filters{display:flex;gap:7px;overflow:auto;padding:2px 0 10px}.chip{white-space:nowrap;border:0;border-radius:20px;padding:8px 12px;font-weight:700}.chip.red{background:#ffd9d6}.chip.yellow{background:#fff0b8}.chip.blue{background:#dbeaff}.chip.green{background:#d9f5df}.card{background:#fff;border-left:7px solid #9aa7b5;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 7px #0000000b}.card.red{border-color:#d93025}.card.yellow{border-color:#e4a900}.card.blue{border-color:#1677ff}.card.green{border-color:#1b9a4a}.card.black{border-color:#555}.top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.name{font-size:18px;font-weight:800}.badge{padding:5px 9px;border-radius:15px;font-size:12px;font-weight:800}.badge.red{background:#ffe1de;color:#9d2018}.badge.yellow{background:#fff3c4;color:#795b00}.badge.blue{background:#e2edff;color:#1558a5}.badge.green{background:#dcf6e4;color:#18733b}.badge.black{background:#eee;color:#444}.date{font-weight:800;margin:8px 0;color:#17324d}.muted{color:#5f6d7b;font-size:14px}.money{display:flex;justify-content:space-between;margin-top:8px}.total{font-weight:900;font-size:17px;color:#18833f}.actions{display:flex;gap:7px;margin-top:12px}.actions .btn{flex:1}.empty{text-align:center;padding:40px 15px;color:#667}.modal{display:none;position:fixed;inset:0;background:#0007;z-index:20;padding:12px;overflow:auto}.modal.show{display:block}.modal#procModal{z-index:40}.modal#historyModal{z-index:30}.sheet{background:#fff;max-width:700px;margin:20px auto;border-radius:18px;padding:16px}.sheet h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:10px}.field.full{grid-column:1/-1}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid #cbd5df;border-radius:10px;font-size:16px;background:#fff}.field textarea{min-height:90px;resize:vertical}.proc-items{display:flex;flex-direction:column;gap:8px}.proc-row{border:1px solid #d9e0e7;border-radius:12px;padding:10px;background:#f8fafc}.proc-row-grid{display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr auto;gap:7px;align-items:end}.proc-row label{font-size:11px;font-weight:800;display:block;margin-bottom:3px}.proc-row input,.proc-row select{width:100%;padding:9px;border:1px solid #cbd5df;border-radius:8px;font-size:15px;background:#fff}.proc-subtotal{font-weight:900;text-align:right;margin-top:7px}.proc-total{font-weight:900;font-size:18px;text-align:right;margin-top:8px;color:#18833f}@media(max-width:560px){.proc-row-grid{grid-template-columns:1fr 1fr}.proc-row-grid .proc-name{grid-column:1/-1}.proc-row-grid .proc-remove{grid-column:1/-1}.proc-row-grid .proc-remove .btn{width:100%}}.modal-actions{display:flex;gap:8px;margin-top:14px}.modal-actions .btn{flex:1}.section{font-weight:900;margin:18px 0 6px;color:#17324d}.backup{display:flex;gap:7px;margin:12px 0}.backup .btn{flex:1}.hint{font-size:12px;color:#667;margin-top:5px}@media(max-width:560px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style></head>
+<body>
+<header><div class="wrap"><h1>Controle de Contatos</h1><small>V13 • foco nos retornos</small></div></header>
+<main class="wrap">
+<div class="toolbar"><input id="search" class="search" placeholder="🔎 Nome, CPF ou telefone" oninput="render()"><button class="btn primary" onclick="openForm()">＋ Novo</button><button type="button" class="btn secondary" onclick="openProcedureManager()">⚙ Procedimentos</button></div>
+<div class="filters">
+<button class="chip red" onclick="setFilter('atrasado')">🔴 Atrasados <span id="cA">0</span></button>
+<button class="chip yellow" onclick="setFilter('hoje')">🟡 Hoje <span id="cH">0</span></button>
+<button class="chip blue" onclick="setFilter('proximo')">🔵 Próximos <span id="cP">0</span></button>
+<button class="chip green" onclick="setFilter('concluido')">🟢 Concluídos <span id="cC">0</span></button>
+<button class="chip" onclick="setFilter('todos')">Todos</button></div>
+<div id="list"></div>
+<div class="section">Dados</div><div class="backup"><button class="btn secondary" onclick="exportData()">💾 Exportar backup</button><button class="btn secondary" onclick="document.getElementById('file').click()">📥 Importar</button><input id="file" type="file" accept="application/json" hidden onchange="importData(event)"></div>
+</main>
+<div id="procModal" class="modal"><div class="sheet"><h2>Procedimentos</h2><div class="field"><label>Novo procedimento</label><div style="display:flex;gap:8px"><input id="newProcedure" type="text" placeholder="Digite o nome do procedimento" onkeydown="if(event.key===\'Enter\'){event.preventDefault();saveProcedure()}"><button type="button" class="btn primary" onclick="saveProcedure()">Adicionar</button></div></div><div class="section">Cadastrados</div><div id="procList"></div><div class="modal-actions"><button type="button" class="btn secondary" onclick="closeProcedureManager()">Fechar</button></div></div></div>
+<div id="historyModal" class="modal"><div class="sheet"><h2 id="historyTitle">Histórico do cliente</h2><div id="historyBody"></div><div class="modal-actions"><button type="button" class="btn secondary" onclick="closeHistory()">Fechar</button></div></div></div>
+<div id="modal" class="modal"><div class="sheet"><h2 id="formTitle">Novo contato</h2><form id="form" onsubmit="saveContact(event)"><input id="id" type="hidden">
+<div class="grid">
+<div class="field"><label>Data do contato</label><input id="data" type="date" required></div>
+<div class="field"><label>Novo contato / retorno</label><input id="novoContato" type="datetime-local"></div>
+<div class="field full"><label>Nome do paciente</label><input id="nome" required></div>
+<div class="field"><label>CPF</label><input id="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" oninput="formatCPF(this)"></div>
+<div class="field"><label>Telefone</label><input id="telefone" type="tel" inputmode="numeric" maxlength="15" placeholder="(21) 9999-9999" oninput="formatTelefone(this)"></div>
+<div class="field full"><label>Procedimentos</label><div id="procedureItems" class="proc-items"></div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn secondary" onclick="addProcedureRow()">＋ Adicionar procedimento</button><button type="button" class="btn secondary" onclick="openProcedureManager()">⚙️ Cadastrar procedimento</button></div><div class="hint">Um contato pode ter vários procedimentos. Informe a quantidade e os valores de cada um.</div><div id="procGrandTotal" class="proc-total">Total: R$ 0,00</div></div>
+<div class="field"><label>Forma de Pagamento</label><select id="formaPagamento"><option value="">Selecione...</option><option>Dinheiro</option><option>PIX</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>Boleto</option><option>Outro</option></select></div>
+<div class="field"><label>Status</label><select id="status"></select></div>
+<div class="field full"><label>Observações</label><textarea id="observacoes" placeholder="Digite observações sobre este contato..."></textarea></div>
+</div>
+<div class="modal-actions"><button type="button" class="btn secondary" onclick="closeForm()">Cancelar</button><button type="submit" class="btn primary">Salvar</button></div></form>
+
+</div></div>
+<script>
+let currentId=null;
+
+const KEY='contatos_v1'; const PKEY='procedimentos_v1';
+const statuses=[['primeiro_contato','Primeiro contato'],['aguardando','Aguardando retorno'],['sem_resposta','Sem Resposta'],['agendado','Agendado'],['concluido','Concluído'],['nao_interesse','Não teve interesse'],['semcontato','Sem contato']];
+let contacts=JSON.parse(localStorage.getItem(KEY)||'[]'); let procedures=JSON.parse(localStorage.getItem(PKEY)||'[]'); let filter='todos';
+const $=id=>document.getElementById(id); const today=()=>{let d=new Date();return d.toISOString().slice(0,10)};
+function fmtMoney(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function saveAll(){localStorage.setItem(KEY,JSON.stringify(contacts));localStorage.setItem(PKEY,JSON.stringify(procedures))}
+function statusLabel(s){return (statuses.find(x=>x[0]===s)||['','Novo'])[1]}
+function setup(){ $('data').value=today(); $('status').innerHTML=statuses.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join(''); renderProc(); render(); }
+function renderProc(selected=''){ $('procedimento').innerHTML='<option value="">Selecione...</option>'+procedures.map(p=>`<option ${p===selected?'selected':''}>${escapeHtml(p)}</option>`).join('') }
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function parseMoney(v){if(typeof v==='number')return isFinite(v)?v:0;let s=String(v||'').replace(/\s/g,'').replace(/R\$/gi,'');if(!s)return 0;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/[^\d.-]/g,'');let n=Number(s);return isFinite(n)?n:0}
+function formatBRLInput(v){return parseMoney(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function normalizeProcedures(c){
+  if(Array.isArray(c?.procedimentos)) return c.procedimentos.map(p=>({procedimento:p.procedimento||p.nome||'',quantidade:Number(p.quantidade)||1,orcamento:Number(p.orcamento)||0,desconto:Number(p.desconto)||0,total:Math.max(0,(Number(p.orcamento)||0)*(Number(p.quantidade)||1)-(Number(p.desconto)||0))}));
+  if(c?.procedimento) return [{procedimento:c.procedimento,quantidade:1,orcamento:Number(c.orcamento)||0,desconto:Number(c.desconto)||0,total:Number(c.total)||Math.max(0,(Number(c.orcamento)||0)-(Number(c.desconto)||0))}];
+  return [];
+}
+function procedureRowHTML(p={}){const opts='<option value="">Selecione...</option>'+procedures.map(x=>`<option value="${escapeHtml(x)}" ${x===(p.procedimento||'')?'selected':''}>${escapeHtml(x)}</option>`).join('');return `<div class="proc-row"><div class="proc-row-grid"><div class="proc-name"><label>Procedimento</label><select class="p-name">${opts}</select></div><div><label>Quantidade</label><input class="p-qty" type="number" min="1" step="1" value="${Number(p.quantidade)||1}" oninput="calcProcedures()"></div><div><label>Valor unitário</label><input class="p-price" type="text" inputmode="decimal" placeholder="R$ 0,00" value="${p.orcamento!=null&&p.orcamento!==''?formatBRLInput(p.orcamento):''}" oninput="moneyInput(this);calcProcedures()"></div><div><label>Desconto</label><input class="p-discount" type="text" inputmode="decimal" placeholder="R$ 0,00" value="${p.desconto!=null&&p.desconto!==''?formatBRLInput(p.desconto):''}" oninput="moneyInput(this);calcProcedures()"></div><div class="proc-remove"><button type="button" class="btn secondary" onclick="removeProcedureRow(this)">✕ Remover</button></div></div><div class="proc-subtotal">Subtotal: <span class="p-total">R$ 0,00</span></div></div>`}
+function addProcedureRow(p={}){$('procedureItems').insertAdjacentHTML('beforeend',procedureRowHTML(p));calcProcedures()}
+function removeProcedureRow(btn){btn.closest('.proc-row').remove();calcProcedures()}
+function getProcedureData(){return [...document.querySelectorAll('.proc-row')].map(row=>{let qty=Math.max(1,parseInt(row.querySelector('.p-qty').value||'1',10));let price=parseMoney(row.querySelector('.p-price').value);let discount=parseMoney(row.querySelector('.p-discount').value);return {procedimento:row.querySelector('.p-name').value,quantidade:qty,orcamento:price,desconto:discount,total:Math.max(0,price*qty-discount)}})}
+function calcProcedures(){let rows=getProcedureData();let total=rows.reduce((sum,p)=>sum+p.total,0);document.querySelectorAll('.proc-row').forEach((row,i)=>{if(rows[i])row.querySelector('.p-total').textContent=fmtMoney(rows[i].total)});$('procGrandTotal').textContent='Total: '+fmtMoney(total);return total}
+
+function moneyInput(el){let raw=String(el.value||'').replace(/[^\d]/g,'');if(!raw){el.value='';return}el.value=(Number(raw)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function calc(){let a=parseMoney($('orcamento').value),d=parseMoney($('desconto').value);$('total').value=fmtMoney(Math.max(0,a-d))}
+function openProcedureManager(){renderProcedureManager();$('procModal').classList.add('show');$('newProcedure').value='';setTimeout(()=>$('newProcedure').focus(),50)}
+function closeProcedureManager(){$('procModal').classList.remove('show')}
+function saveProcedure(){let p=$('newProcedure').value.trim();if(!p){alert('Digite o nome do procedimento.');return}if(procedures.some(x=>x.toLocaleLowerCase('pt-BR')===p.toLocaleLowerCase('pt-BR'))){alert('Este procedimento já está cadastrado.');return}procedures.push(p);procedures.sort((a,b)=>a.localeCompare(b,'pt-BR'));saveAll();renderProc(p);renderProcedureManager();$('newProcedure').value='';$('newProcedure').focus()}
+function renderProcedureManager(){$('procList').innerHTML=procedures.length?procedures.map((p,i)=>`<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #edf0f3\"><span>${escapeHtml(p)}</span><button type=\"button\" class=\"btn danger\" onclick=\"deleteProcedure(${i})\">Excluir</button></div>`).join(''):'<div class=\"empty\">Nenhum procedimento cadastrado.</div>'}
+function deleteProcedure(i){if(i<0||i>=procedures.length)return;let p=procedures[i];if(!confirm(`Excluir o procedimento "${p}"?`))return;procedures.splice(i,1);saveAll();renderProc();renderProcedureManager()}
+function normalizeCPF(v){return String(v||'').replace(/\D/g,'').slice(0,11)}
+function formatCPF(el){let d=normalizeCPF(el.value);let out=d;if(d.length>3)out=d.slice(0,3)+'.'+d.slice(3);if(d.length>6)out=out.slice(0,7)+'.'+d.slice(6);if(d.length>9)out=out.slice(0,11)+'-'+d.slice(9);el.value=out}
+function formatTelefone(el){
+  let d=String(el.value||'').replace(/\D/g,'').slice(0,11);
+  let out='';
+  if(d.length<=2) out=d?`(${d}`:'';
+  else if(d.length<=6) out=`(${d.slice(0,2)}) ${d.slice(2)}`;
+  else if(d.length<=10) out=`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  else out=`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  el.value=out;
+}function formatTelefoneValue(v){
+  let d=String(v||'').replace(/\D/g,'').slice(0,11);
+  if(d.length<=2) return d?`(${d}`:'';
+  if(d.length<=6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if(d.length<=10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+function cpfDisplay(v){let d=normalizeCPF(v);if(d.length===11)return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);return v||''}
+function openForm(c, clienteCPF=''){ $('modal').classList.add('show'); $('formTitle').textContent=c?'Editar contato':'Novo contato'; $('id').value=c?.id||''; $('data').value=c?.data||today(); $('novoContato').value=c?.novoContato||''; $('nome').value=c?.nome||''; $('cpf').value=c?.cpf?cpfDisplay(c.cpf):''; $('telefone').value=c?.telefone?formatTelefoneValue(c.telefone):''; $('formaPagamento').value=c?.formaPagamento||''; $('observacoes').value=c?.observacoes||''; $('status').value=c?.status||'primeiro_contato'; $('procedureItems').innerHTML=''; let ps=normalizeProcedures(c); if(!ps.length) addProcedureRow(); else ps.forEach(addProcedureRow); calcProcedures(); if(clienteCPF && !c){let hist=contacts.filter(x=>normalizeCPF(x.cpf)===normalizeCPF(clienteCPF));if(hist.length){let last=hist[hist.length-1];$('nome').value=last.nome||'';$('cpf').value=cpfDisplay(last.cpf);$('telefone').value=last.telefone?formatTelefoneValue(last.telefone):'';}} }
+function closeForm(){$('modal').classList.remove('show')}
+function saveContact(e){e.preventDefault();let cpf=normalizeCPF($('cpf').value);if(cpf.length!==11){alert('Digite um CPF válido com 11 números.');return}let procedimentos=getProcedureData();if(!procedimentos.length||procedimentos.some(p=>!p.procedimento)){alert('Adicione pelo menos um procedimento válido.');return}let total=procedimentos.reduce((sum,p)=>sum+p.total,0);let c={id:$('id').value||crypto.randomUUID(),data:$('data').value,novoContato:$('novoContato').value,nome:$('nome').value.trim(),cpf,telefone:$('telefone').value.trim(),procedimentos,procedimento:procedimentos.map(p=>p.procedimento).filter(Boolean).join(', '),orcamento:procedimentos.reduce((sum,p)=>sum+(p.orcamento*p.quantidade),0),desconto:procedimentos.reduce((sum,p)=>sum+p.desconto,0),total,status:$('status').value,formaPagamento:$('formaPagamento').value,observacoes:$('observacoes').value.trim()};let i=contacts.findIndex(x=>x.id===c.id);if(i>=0)contacts[i]=c;else contacts.push(c);saveAll();closeForm();render()}
+function openHistory(cpf){let key=normalizeCPF(cpf);let rows=contacts.filter(x=>normalizeCPF(x.cpf)===key).sort((a,b)=>(b.data||'').localeCompare(a.data||''));if(!rows.length)return;let first=rows[rows.length-1];$('historyTitle').textContent='Histórico — '+(first.nome||cpfDisplay(key));$('historyBody').innerHTML='<div class="muted" style="margin-bottom:10px">CPF: '+escapeHtml(cpfDisplay(key))+' • '+rows.length+' contato(s)</div>'+rows.map(x=>{let ps=normalizeProcedures(x);return `<div class="card ${classify(x)==='atrasado'?'red':classify(x)==='hoje'?'yellow':classify(x)==='proximo'?'blue':'green'}"><div class="top"><strong>${escapeHtml(x.data||'—')}</strong><span class="badge ${classify(x)==='atrasado'?'red':classify(x)==='hoje'?'yellow':classify(x)==='proximo'?'blue':'green'}">${escapeHtml(statusLabel(x.status))}</span></div><div class="muted">${ps.length?ps.map(p=>`${escapeHtml(p.procedimento||'Sem procedimento')} — ${p.quantidade}x — ${fmtMoney(p.total)}`).join('<br>'):'Sem procedimento'}</div><div class="money"><span>Orçamento: ${fmtMoney(x.orcamento)}</span><span>Desconto: ${fmtMoney(x.desconto)}</span></div><div class="total" style="text-align:right;margin-top:6px">Total: ${fmtMoney(x.total)}</div><div class="muted" style="margin-top:6px">Pagamento: ${escapeHtml(x.formaPagamento||'—')}</div>${x.observacoes?`<div class="muted" style="margin-top:6px">📝 ${escapeHtml(x.observacoes)}</div>`:''}<div class="date">🔔 ${timeText(x.novoContato)}</div></div>`}).join('');$('historyModal').classList.add('show')}
+function closeHistory(){$('historyModal').classList.remove('show')}
+function setFilter(f){filter=f;render()}
+function classify(c){if(c.status==='concluido')return'concluido';if(!c.novoContato)return'proximo';let d=new Date(c.novoContato);let now=new Date();let td=today();let ds=c.novoContato.slice(0,10);if(ds<td)return'atrasado';if(ds===td)return'hoje';return'proximo'}
+function timeText(v){if(!v)return'Não definido';let d=new Date(v);return d.toLocaleDateString('pt-BR')+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+function render(){let q=$('search').value.toLowerCase().trim();let counts={atrasado:0,hoje:0,proximo:0,concluido:0};contacts.forEach(c=>counts[classify(c)]++);$('cA').textContent=counts.atrasado;$('cH').textContent=counts.hoje;$('cP').textContent=counts.proximo;$('cC').textContent=counts.concluido;
+let arr=contacts.filter(c=>{let cls=classify(c);let text=(c.nome+' '+c.cpf+' '+c.telefone+' '+(c.procedimento||'')+' '+(c.observacoes||'')+' '+(c.formaPagamento||'')).toLowerCase();return(filter==='todos'||cls===filter)&&(!q||text.includes(q))});arr.sort((a,b)=>{let ca=classify(a),cb=classify(b),rank={atrasado:0,hoje:1,proximo:2,concluido:3};if(rank[ca]!==rank[cb])return rank[ca]-rank[cb];return(a.novoContato||'9999').localeCompare(b.novoContato||'9999')});
+$('list').innerHTML=arr.length?arr.map(c=>card(c)).join(''):'<div class="empty">Nenhum contato encontrado.</div>'}
+function card(c){let cls=classify(c);let label={atrasado:'RETORNO ATRASADO',hoje:'RETORNO HOJE',proximo:'PRÓXIMO RETORNO',concluido:'CONCLUÍDO'}[cls];let ps=normalizeProcedures(c);let ptxt=ps.length?ps.map(p=>`${escapeHtml(p.procedimento||'Sem procedimento')} (${p.quantidade}x)`).join(' • '):'Sem procedimento';return `<div class="card ${cls==='atrasado'?'red':cls==='hoje'?'yellow':cls==='proximo'?'blue':'green'}"><div class="top"><div><div class="name">${escapeHtml(c.nome)}</div><div class="muted">${ptxt}</div></div><span class="badge ${cls==='atrasado'?'red':cls==='hoje'?'yellow':cls==='proximo'?'blue':'green'}">${label}</span></div><div class="date">📅 ${timeText(c.novoContato)}</div><div class="muted">CPF: ${escapeHtml(c.cpf||'—')} • 📞 ${escapeHtml(c.telefone||'—')}</div><div class="money"><span>Orçamento: ${fmtMoney(c.orcamento)}</span><span>Desconto: ${fmtMoney(c.desconto)}</span></div><div class="money"><span>${escapeHtml(c.formaPagamento||'Forma de pagamento não informada')}</span><span class="total">Total: ${fmtMoney(c.total)}</span></div>${c.observacoes?`<div class="muted" style="margin-top:8px">📝 ${escapeHtml(c.observacoes)}</div>`:''}<div class="actions"><button class="btn secondary" onclick="openHistory('${c.cpf}')">📜 Histórico</button><button class="btn secondary" onclick="deleteContact('${c.id}')">🗑️ Excluir</button><button class="btn secondary" onclick="openForm(contacts.find(x=>x.id==='${c.id}'))">✏️ Editar</button><button class="btn ${cls==='concluido'?'secondary':'primary'}" onclick="nextContact('${c.id}')">${cls==='concluido'?'📅 Novo retorno':'📅 Novo contato'}</button></div></div>`}
+function nextContact(id){let c=contacts.find(x=>x.id===id);if(!c)return;openForm(null,c.cpf);setTimeout(()=>{ $('novoContato').focus(); $('novoContato').scrollIntoView({behavior:'smooth',block:'center'});},50)}
+function exportData(){let blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),contacts,procedures},null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='controle-contatos-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.contacts))throw Error();contacts=d.contacts;procedures=Array.isArray(d.procedures)?d.procedures:procedures;saveAll();renderProc();render();alert('Backup importado com sucesso.')}catch(err){alert('Arquivo de backup inválido.')}};r.readAsText(f);e.target.value=''}
+setup();
+
+function deleteContact(id){
+  const c = contacts.find(x => String(x.id) === String(id));
+  if(!c) return;
+  const label = c.nome || 'este contato';
+  const ok = confirm(
+    `Excluir o contato de ${label}?\n\n` +
+    `Esta ação removerá somente este registro do histórico. ` +
+    `Os demais contatos do mesmo CPF serão mantidos.`
+  );
+  if(!ok) return;
+  contacts = contacts.filter(x => String(x.id) !== String(id));
+  saveAll();
+  render();
+  if(typeof closeModal === 'function') closeModal();
+  if(typeof closeDetail === 'function') closeDetail();
+}
+</script></body></html>
